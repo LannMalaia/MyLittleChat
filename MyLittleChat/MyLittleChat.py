@@ -2,34 +2,41 @@
 
 import reflex as rx
 
-from MyLittleChat.components import button
+from MyLittleChat.components import layout
 from rxconfig import config
 
 
 class State(rx.State):
-    num = 0
-    my_todo = ["aa", "bb", "cc", "dd"]
-    def increase_num(self):
-        self.num += 1
-    def decrease_num(self):
-        self.num -= 1
+    num: int
+    num_list = [3, 2, 1]
 
+    def add_num(self):
+        self.num_list.insert(0, self.num)
+    def set_num(self, val):
+        self.num = val
 
 
 def index() -> rx.Component:
     # Welcome Page (Index)
-    return rx.container(
-        rx.color_mode.button(position="top-right"),
-        rx.hstack(
-            rx.button("감소", on_click=State.decrease_num, color_scheme="grass"),
-            rx.text(State.num),
-            rx.button("증가", on_click=State.increase_num, color_scheme="ruby"),
-            spacing="4",
+    return rx.hstack(
+        layout.side_navi(),
+        rx.container(
+            rx.vstack(
+                rx.form(
+                    rx.input(on_change=State.set_num),
+                    on_submit= lambda x: State.add_num,
+                    reset_on_submit=True
+                ),
+                rx.hstack(
+                    rx.input(value=State.num, on_change=State.set_num),
+                    rx.button("추가", on_click=State.add_num)
+                ),
+                rx.foreach(State.num_list, rx.text)
+            ),
+            height="100%"
         ),
-        rx.vstack(
-            rx.foreach(State.my_todo, button.my_list_element),
-        ),
-        rx.logo(),
+        width="100%",
+        height="100%"
     )
 
 

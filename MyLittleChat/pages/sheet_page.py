@@ -1,6 +1,7 @@
 import reflex as rx
 from MyLittleChat.systems.mlcState import State as st
 import MyLittleChat.components.layout as layout
+import MyLittleChat.components.form as form
 
 @rx.page(route="/sheet")
 def sheetMaking() -> rx.Component:
@@ -11,7 +12,11 @@ def sheetMaking() -> rx.Component:
             rx.vstack(
                 rx.heading("기본 설정"),
                 rx.input(placeholder="이름"),
-                rx.input(placeholder="설명"),
+                form.long_textarea(placeholder="설명"),
+                rx.divider(),
+                rx.heading("표상"),
+                form.symbol_selector(is_good = True),
+                form.symbol_selector(is_good = False),
                 rx.divider(),
                 rx.heading("정체성과 고민"),
                 rx.input(placeholder="정체성"),
@@ -40,6 +45,6 @@ def sheetMaking() -> rx.Component:
                     "height": "calc(100vh - 2rem)",
 #                    "justifyContent": "space-between"
                 }
-            ),
+            )
         )
     )

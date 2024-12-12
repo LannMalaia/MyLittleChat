@@ -1,6 +1,9 @@
 import reflex as rx
 
 class State(rx.State):
+    
+    create_form: dict = {}
+
     num: int
     num_list = [3, 2, 1]
 

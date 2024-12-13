@@ -29,8 +29,8 @@ def sidebar_item(
 def sidebar_items() -> rx.Component:
     return rx.vstack(
         sidebar_item("메인 페이지", "layout-dashboard", "/#"),
-        sidebar_item("시나리오", "square-library", "/scenario"),
-        sidebar_item("시트 작성", "bar-chart-4", "/sheet"),
+        sidebar_item("시나리오", "messages-square", "/scenario"),
+        sidebar_item("시트 작성", "newspaper", "/sheet"),
         sidebar_item("Messages", "mail", "/#"),
         spacing="1",
         width="100%",

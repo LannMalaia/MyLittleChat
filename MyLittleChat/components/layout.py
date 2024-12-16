@@ -119,43 +119,65 @@ def side_navi() -> rx.Component:
     )
 
 
+def scenario_item(
+    text: str, icon: str, href: str
+) -> rx.Component:
+    return rx.link(
+        rx.hstack(
+            rx.icon(icon),
+            rx.text(text, size="4"),
+            width="100%",
+            padding_x="0.3rem",
+            padding_y="0.4rem",
+            align="center",
+            style={
+                "_hover": {
+                    "bg": rx.color("accent", 4),
+                    "color": rx.color("accent", 11),
+                },
+                "border-radius": "0.5em",
+            },
+        ),
+        href=href,
+        underline="none",
+        weight="medium",
+        width="100%",
+    )
 def scenario_category(text: str, icon: str) -> rx.Component:
     return rx.accordion.root(
         rx.accordion.item(
             header="test 1",
             content=rx.vstack(
-                sidebar_item("aaa", "minus", ""),
-                sidebar_item("bbb", "minus", ""),
-                sidebar_item("ccc", "minus", ""),
-                sidebar_item("ddd", "minus", ""),
-                sidebar_item("eee", "minus", ""),
-                padding="0.2em"
+                scenario_item("aaa", "minus", ""),
+                scenario_item("bbb", "minus", ""),
+                scenario_item("ccc", "minus", ""),
+                scenario_item("ddd", "minus", ""),
+                scenario_item("eee", "minus", ""),
             )
         ),
         rx.accordion.item(
             header="test 2",
             content=rx.vstack(
-                sidebar_item("aaa", "minus", ""),
-                sidebar_item("bbb", "minus", ""),
-                sidebar_item("ccc", "minus", ""),
-                sidebar_item("ddd", "minus", ""),
-                sidebar_item("eee", "minus", ""),
-                padding="0.2em"
+                scenario_item("aaa", "minus", ""),
+                scenario_item("bbb", "minus", ""),
+                scenario_item("ccc", "minus", ""),
+                scenario_item("ddd", "minus", ""),
+                scenario_item("eee", "minus", ""),
             )
         ),
         rx.accordion.item(
             header="test 3",
             content=rx.vstack(
-                sidebar_item("aaa", "minus", ""),
-                sidebar_item("bbb", "minus", ""),
-                sidebar_item("ccc", "minus", ""),
-                sidebar_item("ddd", "minus", ""),
-                sidebar_item("eee", "minus", ""),
-                padding="0.2em"
+                scenario_item("aaa", "minus", ""),
+                scenario_item("bbb", "minus", ""),
+                scenario_item("ccc", "minus", ""),
+                scenario_item("ddd", "minus", ""),
+                scenario_item("eee", "minus", ""),
             )
         ),
         width="100%",
         variant="ghost",
+        collapsible=True,
     )
 
 def scenario_items() -> rx.Component:
@@ -180,6 +202,9 @@ def scenario_navi() -> rx.Component:
                             ),
                             width="100%",
                         ),
+                        rx.box(
+                            rx.heading("목록", align="right"),
+                        ),
                         scenario_items(),
                         rx.spacer(),
                         rx.vstack(
@@ -200,7 +225,7 @@ def scenario_navi() -> rx.Component:
                     top="auto",
                     right="auto",
                     height="100%",
-                    width="20em",
+                    width="30em",
                     padding="1.5em",
                     bg=rx.color("accent", 2),
                 ),

@@ -9,7 +9,7 @@ class ScenarioState(rx.State):
     @rx.event
     async def handle_chat(self, form_data: dict):
         self.add_chat(form_data["chat"])
-        response = await ChatManager().chat(msg=form_data["chat"], option="gemini")
+        response = await ChatManager().chat(token="user_token", msg=form_data["chat"], option="gemini")
         print(response)
         self.add_chat(response)
         
@@ -21,9 +21,9 @@ def scenario_page() -> rx.Component:
     # Welcome Page (Index)
     return rx.hstack(
         layout.side_navi(),
+        layout.scenario_navi(),
         rx.container(
             rx.vstack(
-                layout.scenario_navi(),
                 rx.box(
                     rx.foreach(ScenarioState.chat_list, chat.temp_chat),
                     style={

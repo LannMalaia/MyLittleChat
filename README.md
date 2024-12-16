@@ -14,3 +14,7 @@ reflex run 으로 구동시키자
 사용된 환경변수
 - CLAUDE_API_KEY (클로드 API 키, claude 3.0 sonnet)
 - GOOGLE_API_KEY (구글 GEMINI API 키, gemini 2.0 flash exp)
+
+쓰는 것을 고려할만한 API
+getimg.ai - 이미지 생성만을 위한 api
+Replicate - 클라우드를 사용하는 ai api. 내가 튜닝한 모델을 직접 게시해서 굴릴 수 있는게 장점.

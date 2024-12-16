@@ -25,7 +25,6 @@ def sidebar_item(
         width="100%",
     )
 
-
 def sidebar_items() -> rx.Component:
     return rx.vstack(
         sidebar_item("메인 페이지", "layout-dashboard", "/#"),
@@ -35,7 +34,6 @@ def sidebar_items() -> rx.Component:
         spacing="1",
         width="100%",
     )
-
 
 def side_navi() -> rx.Component:
     return rx.box(
@@ -116,6 +114,99 @@ def side_navi() -> rx.Component:
                 width="100%",
             ),
             direction="left",
+        ),
+        padding="1em"
+    )
+
+
+def scenario_category(text: str, icon: str) -> rx.Component:
+    return rx.accordion.root(
+        rx.accordion.item(
+            header="test 1",
+            content=rx.vstack(
+                sidebar_item("aaa", "minus", ""),
+                sidebar_item("bbb", "minus", ""),
+                sidebar_item("ccc", "minus", ""),
+                sidebar_item("ddd", "minus", ""),
+                sidebar_item("eee", "minus", ""),
+                padding="0.2em"
+            )
+        ),
+        rx.accordion.item(
+            header="test 2",
+            content=rx.vstack(
+                sidebar_item("aaa", "minus", ""),
+                sidebar_item("bbb", "minus", ""),
+                sidebar_item("ccc", "minus", ""),
+                sidebar_item("ddd", "minus", ""),
+                sidebar_item("eee", "minus", ""),
+                padding="0.2em"
+            )
+        ),
+        rx.accordion.item(
+            header="test 3",
+            content=rx.vstack(
+                sidebar_item("aaa", "minus", ""),
+                sidebar_item("bbb", "minus", ""),
+                sidebar_item("ccc", "minus", ""),
+                sidebar_item("ddd", "minus", ""),
+                sidebar_item("eee", "minus", ""),
+                padding="0.2em"
+            )
+        ),
+        width="100%",
+        variant="ghost",
+    )
+
+def scenario_items() -> rx.Component:
+    return rx.vstack(
+        scenario_category("메인 페이지", "layout-dashboard"),
+        spacing="1",
+        width="100%",
+    )
+
+def scenario_navi() -> rx.Component:
+    return rx.box(
+        rx.drawer.root(
+            rx.drawer.trigger(
+                rx.icon("align-justify", size=30)
+            ),
+            rx.drawer.portal(
+                rx.drawer.content(
+                    rx.vstack(
+                        rx.box(
+                            rx.drawer.close(
+                                rx.icon("x", size=30)
+                            ),
+                            width="100%",
+                        ),
+                        scenario_items(),
+                        rx.spacer(),
+                        rx.vstack(
+                            rx.vstack(
+                                sidebar_item(
+                                    "새로운 시나리오",
+                                    "plus",
+                                    "/#",
+                                ),
+                                width="100%",
+                                spacing="1",
+                            ),
+                        spacing="5",
+                        width="100%",
+                        ),
+                        width="100%",
+                    ),
+                    top="auto",
+                    right="auto",
+                    height="100%",
+                    width="20em",
+                    padding="1.5em",
+                    bg=rx.color("accent", 2),
+                ),
+                width="100%",
+            ),
+            direction="left"
         ),
         padding="1em"
     )

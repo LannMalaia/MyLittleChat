@@ -1,6 +1,20 @@
 import reflex as rx
-from MyLittleChat.systems.mlcState import State as st
 import MyLittleChat.components.layout as layout
+import MyLittleChat.components.form_chat as chat
+from MyLittleChat.manager.chat_manager import ChatManager
+
+class ScenarioState(rx.State):
+    chat_list: list[list[str]] = [["test 1"], ["이것은", "개행", "테스트다"], ["test 3"]]
+
+    @rx.event
+    async def handle_chat(self, form_data: dict):
+        self.add_chat(form_data["chat"])
+        response = await ChatManager().chat(msg=form_data["chat"], option="gemini")
+        print(response)
+        self.add_chat(response)
+        
+    def add_chat(self, msg: str):
+        self.chat_list.append(msg.split("\n"))
 
 @rx.page(route="/scenario")
 def scenario_page() -> rx.Component:
@@ -9,22 +23,16 @@ def scenario_page() -> rx.Component:
         layout.side_navi(),
         rx.container(
             rx.vstack(
+                layout.scenario_navi(),
                 rx.box(
-                    rx.foreach(st.num_list, rx.text),
+                    rx.foreach(ScenarioState.chat_list, chat.temp_chat),
                     style={
                         "flex": 1,
                         "overflow": "auto"
                     }
                 ),
                 rx.divider(),
-                rx.form(
-                    rx.input(placeholder="이곳에 텍스트 입력", on_change=st.set_num),
-                    on_submit= lambda x: st.add_num,
-                    reset_on_submit=True,
-                    style={
-                        "width": "100%"
-                    }
-                ),
+                chat.chatter(ScenarioState.handle_chat),
                 style={
                     "height": "calc(100vh - 2rem)",
                     "justifyContent": "space-between"

@@ -2,6 +2,7 @@ import reflex as rx
 import MyLittleChat.components.layout as layout
 import MyLittleChat.components.form_chat as chat
 from MyLittleChat.manager.chat_manager import ChatManager
+from MyLittleChat.manager.chat_manager import Chat
 
 class ScenarioState(rx.State):
     chat_list: list[list[str]] = [["test 1"], ["이것은", "개행", "테스트다"], ["test 3"]]

@@ -1,25 +1,31 @@
 from langchain.document_loaders import TextLoader
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.embeddings import Embeddings
-from openai import OpenAI
+from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain.memory import ConversationBufferMemory
+from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
 from typing import List
 
 import os
 
-class LangchainRagMaker:
+class LangchainManager:
+    """
+        RAG 문서 제작\n
+        임베딩\n
+        채팅 작업
+    """
     # 해당 디렉토리의 모든 파일명을 가져오는 함수
     def _get_all_files_in_directory(self, dir):
         # 해당 디렉토리의 모든 파일 리스트 가져오기
         files = [os.path.join(dir, file) for file in os.listdir(dir)]
         return files
 
-    def load(self):
+    # rag 만들기
+    def make_rag(self):
         result = []
-
-        # 파일 선택 창을 띄워서 파일을 선택한다. 이 때 엑셀 파일로 한정한다.
-        # root = tk.Tk()
-        # root.withdraw()
-        # folder_path = filedialog.askdirectory(initialdir="./")
         folder_path = "./rag_documents"
 
         # 폴더 내의 모든 텍스트 파일을 불러와 RAG 문서화 한다.
@@ -33,31 +39,25 @@ class LangchainRagMaker:
         for file_path in file_paths:
             data = TextLoader(file_path, encoding="utf-8").load()
             texts = text_splitter.split_text(data[0].page_content)
-            result.append(data)
+            result.extend(texts)
         return result
     
-class Embedder(Embeddings):
-    def __init__(self, base_url, api_key="lm-studio"):
-        self.client = OpenAI(base_url=base_url, api_key=api_key)
+    # 텍스트 리스트를 임베드하여 벡터스토어로 만든다
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings_model = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-004"
+        )
+        embeddings = embeddings_model.embed_documents(texts=texts)
+        return embeddings
     
-    def embed_documents(self, texts: List[str], model="nomic-embed") -> List[List[float]]:
-        texts = list(map(lambda text:text.replace("\n", " "), texts))
-        datas = self.client.embeddings.create(input=texts, model=model).data
-        return list(map(lambda data:data.embedding, datas))
-        
+    # 특정 쿼리(클라이언트의 질문 등) 한 문장에 대한 유사도 검사 메소드
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
-
-from langchain_openai import ChatOpenAI
-from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain.memory import ConversationBufferMemory
-from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
+    
+    # TODO FAISS 적용하고... 모델에 RAG 검색한 값을 기반으로 출력할 수 있게
 
 class LangchainRequester:
     def ready(vectorstore):
-
         # 언어 모델
         llm = ChatOpenAI(
             base_url="http://localhost:5000/v1",

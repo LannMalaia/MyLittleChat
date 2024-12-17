@@ -9,7 +9,7 @@ reflex run 으로 구동시키자
  파이썬 기반 웹 프레임워크
 - SQLModel
  SQL이 다루기 쉽게 되는 거
-- dotenv
+- python-dotenv
  .env 환경 변수 쉽게 불러오는 거
 - langchain
  랭체인 코어 패키지

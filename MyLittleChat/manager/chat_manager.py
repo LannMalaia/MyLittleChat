@@ -68,12 +68,13 @@ class ChatManager():
                 message=msg
             )
         )
+        logs_for_llm = [log.to_dict() for log in logs]
         if llm_type == "claude":
-            response = self.llm_claude.invoke(logs)
+            response = self.llm_claude.invoke(logs_for_llm)
         elif llm_type == "gemini":
-            response = self.llm_gemini.invoke(logs)
+            response = self.llm_gemini.invoke(logs_for_llm)
         elif llm_type == "groq":
-            response = self.llm_groq.invoke(logs)
+            response = self.llm_groq.invoke(logs_for_llm)
         else:
             raise KeyError
         logs.append(

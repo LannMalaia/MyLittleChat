@@ -96,96 +96,199 @@ class SymbolSelector(rx.ComponentState):
 
 symbol_selector = SymbolSelector.create
 
-def long_textarea(placeholder: str):
+def long_textarea(placeholder: str) -> rx.Component:
     return rx.text_area(
         placeholder=placeholder,
+        size="3",
+        variant="surface",
+        radius="large",
         style={
             "flex":"1",
             "overflow":"auto",
             "width":"100%"
         }
     )
+def short_textline(placeholder: str) -> rx.Component:
+    return rx.input(
+        placeholder=placeholder,
+        size="3",
+        variant="surface",
+        radius="large",
+        max_length=20,
+        min_length=3,
+        style={
+            "width":"15em",
+            "padding":"0.5em 0"
+        }
+    )
+def long_textline(placeholder: str) -> rx.Component:
+    return rx.input(
+        placeholder=placeholder,
+        size="3",
+        variant="surface",
+        radius="large",
+        max_length=40,
+        min_length=3,
+        style={
+            "flex":"1",
+            "overflow":"auto",
+            "width":"100%",
+            "padding":"0.5em 0"
+        }
+    )
+def aspect_input(placeholder: str) -> rx.Component:
+    return rx.flex(
+        long_textline(placeholder=placeholder),
+        rx.icon_button("minus", size="3"),
+        spacing="2",
+        style={
+            "flex":"1",
+            "width":"100%"
+        }
+    )
+def skill_input() -> rx.Component:
+    return rx.flex(
+        short_textline(placeholder="특기명"),
+        long_textline(placeholder="특기 설명"),
+        spacing="2",
+        style={
+            "flex":"1",
+            "width":"100%"
+        }
+    )
 
+stat_badge_props = {
+    "radius": "full",
+    "variant": "surface",
+    "size": "3",
+    "cursor": "pointer",
+    "style": {"_hover": {"opacity": 0.75}},
+}
 class StatSelector(rx.ComponentState):
 
-    selected_stats: list[list[str]] = [
-        ["", "", "", ""],
-        ["", "", ""],
-        ["", ""],
-        [""]  # 각 레벨의 선택 상태
-    ]
-    unselected_stats: list[str] = [
-        "기술", "마법학", "학식", "범죄", "사교", "속임수", 
-        "자극", "주의력", "운전", "운동능력", "체력", "의지력", "접근전", "사격"
+    stats: list[list[str]] = [
+        ["기술", "마법학", "학식", "범죄", "사교", "속임수", 
+        "자극", "주의력", "운전", "운동능력", "체력", "의지력", "접근전", "사격"],
+        [],
+        [],
+        [],
+        []  # 각 레벨의 선택 상태
     ]
 
     @rx.event
-    def select_stat(cls, value: str, level: int, index: int):
-        # 선택 상태를 반영한 상태 업데이트
-        before = cls.selected_stats[level][index]
-        print(f"{before} 을(를) {value} 로 전환")
-
-        for arr in cls.selected_stats:
+    def up_stat(cls, value: str):
+        for i in range(5):
+            arr = cls.stats[i]
             if value in arr:
-                return rx.toast("이미 선택되어 있습니다.")
-
-        # 새로운 값 선택
-        cls.selected_stats[level][index] = value
-        # cls.unselected_stats.remove(value)
-
-        print(f"{type(cls.selected_stats[level][index])}!")
-        print(f"{cls.selected_stats[level][index]}!!")
-  
-    def is_in(cls, value):
-        print(value)
-        for arr in cls.selected_stats:
+                if i < 4:
+                    up_arr = cls.stats[i + 1]
+                    if len(up_arr) < len(arr) - 1:
+                        arr.remove(value)
+                        cls.stats[i + 1].append(value)
+                    else:
+                        return rx.toast("피라미드 구조에 위배됩니다.")
+                    return
+                else:
+                    return rx.toast("범위를 벗어났습니다.")
+    @rx.event
+    def down_stat(cls, value: str):
+        for i in range(5):
+            arr = cls.stats[i]
             if value in arr:
-                return True
-        return False
+                if i > 0:
+                    arr.remove(value)
+                    cls.stats[i - 1].append(value)
+                    return
+                else:
+                    return rx.toast("범위를 벗어났습니다.")
 
     @classmethod
     def get_component(cls, **props):
-        def create_selector(level, index):
-            return rx.flex(
-                    rx.select.root(
-                        rx.select.trigger(),
-                        rx.select.content(
-                            rx.select.group(
-                                rx.foreach(cls.unselected_stats, lambda ss: rx.select.item(ss, value=ss, disabled=not cls.is_in(ss)))
-                            )
-                        ),
-                        value=cls.selected_stats[level][index],
-                        on_change=lambda x: cls.select_stat(x, level, index),
-                        default_value="",
-                        width="100%"
-                    )
-                )
+        def selected_item_chip(item: str) -> rx.Component:
+            return rx.badge(
+                rx.icon("arrow_up", size=18, on_click=cls.up_stat(item)),
+                item,
+                rx.icon("arrow_down", size=18, on_click=cls.down_stat(item)),
+                color_scheme="green",
+                **stat_badge_props,
+                # on_click=cls.up_stat(item)
+            )
+        
         return rx.vstack(
             rx.hstack(
-                rx.text("+4"),
+                rx.text("+4 (대단함)", align="center", style={"width":"7em"}),
                 rx.divider(orientation="vertical"),
-                create_selector(3, 0)
+                rx.flex(
+                    rx.foreach(
+                        cls.stats[4], selected_item_chip
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                    style={
+                        "flex":"1",
+                        "width":"100%"
+                    }
+                )
             ),
             rx.hstack(
-                rx.text("+3"),
+                rx.text("+3 (우수함)", align="center", style={"width":"7em"}),
                 rx.divider(orientation="vertical"),
-                create_selector(2, 0),
-                create_selector(2, 1)
+                rx.flex(
+                    rx.foreach(
+                        cls.stats[3], selected_item_chip
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                    style={
+                        "flex":"1",
+                        "width":"100%"
+                    }
+                )
             ),
             rx.hstack(
-                rx.text("+2"),
+                rx.text("+2 (양호함)", align="center", style={"width":"7em"}),
                 rx.divider(orientation="vertical"),
-                create_selector(1, 0),
-                create_selector(1, 1),
-                create_selector(1, 2)
+                rx.flex(
+                    rx.foreach(
+                        cls.stats[2], selected_item_chip
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                    style={
+                        "flex":"1",
+                        "width":"100%"
+                    }
+                )
             ),
             rx.hstack(
-                rx.text("+1"),
+                rx.text("+1 (평범함)", align="center", style={"width":"7em"}),
                 rx.divider(orientation="vertical"),
-                create_selector(0, 0),
-                create_selector(0, 1),
-                create_selector(0, 2),
-                create_selector(0, 3)
+                rx.flex(
+                    rx.foreach(
+                        cls.stats[1], selected_item_chip
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                    style={
+                        "flex":"1",
+                        "width":"100%"
+                    }
+                )
+            ),
+            rx.hstack(
+                rx.text("+0 (미약함)", align="center", style={"width":"7em"}),
+                rx.divider(orientation="vertical"),
+                rx.flex(
+                    rx.foreach(
+                        cls.stats[0], selected_item_chip
+                    ),
+                    spacing="2",
+                    flex_wrap="wrap",
+                    style={
+                        "flex":"1",
+                        "width":"100%"
+                    }
+                )
             )
         )
     

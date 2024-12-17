@@ -6,14 +6,30 @@ reflex run 으로 구동시키자
 
 사용된 라이브러리
 - Reflex
+ 파이썬 기반 웹 프레임워크
 - SQLModel
+ SQL이 다루기 쉽게 되는 거
 - dotenv
+ .env 환경 변수 쉽게 불러오는 거
+- langchain
+ 랭체인 코어 패키지
+- langchain-community
+ 랭체인 커뮤니티 패키지
 - langchain-anthropic
+ 앤트로픽의 클로드 LLM을 위한 랭체인
 - langchain-google-genai
+ 구글의 제미나이 LLM을 위한 랭체인
+- langchain-groq
+ 그록의 LLM 모델들을 사용하기 위한 랭체인
+ 그록은 24-12-17 기준 무료로 LLM을 사용할 수 있게 해준다구
+- langchain-text-splitters
+ RAG 적용을 위해 문서 텍스트를 쪼개주는 역할을 하는 패키지
+
 
 사용된 환경변수
 - CLAUDE_API_KEY (클로드 API 키, claude 3.0 sonnet)
 - GOOGLE_API_KEY (구글 GEMINI API 키, gemini 2.0 flash exp)
+- GROQ_API_KEY (그록 API 키, llama-3.3-70b-versatile)
 
 쓰는 것을 고려할만한 API
 getimg.ai - 이미지 생성만을 위한 api

@@ -148,11 +148,11 @@ def scenario_category(text: str, icon: str) -> rx.Component:
         rx.accordion.item(
             header="test 1",
             content=rx.vstack(
-                scenario_item("aaa", "minus", ""),
-                scenario_item("bbb", "minus", ""),
-                scenario_item("ccc", "minus", ""),
-                scenario_item("ddd", "minus", ""),
-                scenario_item("eee", "minus", ""),
+                scenario_item("aaa", "minus", "/scenario/aaa"),
+                scenario_item("bbb", "minus", "/scenario/bbb"),
+                scenario_item("ccc", "minus", "/scenario/ccc"),
+                scenario_item("ddd", "minus", "/scenario/ddd"),
+                scenario_item("eee", "minus", "/scenario/eee"),
             )
         ),
         rx.accordion.item(

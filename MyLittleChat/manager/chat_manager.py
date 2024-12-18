@@ -4,6 +4,8 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 
+from MyLittleChat.manager.langchain_manager import LangchainManager
+
 load_dotenv()
 
 class Chat():
@@ -69,20 +71,22 @@ class ChatManager():
             )
         )
         logs_for_llm = [log.to_dict() for log in logs]
+        llm = self.llm_claude
         if llm_type == "claude":
-            response = self.llm_claude.invoke(logs_for_llm)
+            llm = self.llm_claude
         elif llm_type == "gemini":
-            response = self.llm_gemini.invoke(logs_for_llm)
+            llm = self.llm_gemini
         elif llm_type == "groq":
-            response = self.llm_groq.invoke(logs_for_llm)
-        else:
-            raise KeyError
+            llm = self.llm_groq
+
+        response = LangchainManager().chat(llm=llm, session_token=token, message=msg)
+
         logs.append(
             Chat(
                 llm_type=llm_type,
                 role="assistant",
                 character="GM",
-                message=response.content
+                message=response
             )
         )
-        return response.content
+        return response

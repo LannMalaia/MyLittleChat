@@ -1,108 +1,155 @@
-from langchain.document_loaders import TextLoader
+from operator import itemgetter
+from langchain_community.document_loaders import TextLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_text_splitters import CharacterTextSplitter
-from langchain_core.embeddings import Embeddings
-from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain.memory import ConversationBufferMemory
-from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
+from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores.utils import DistanceStrategy
+from langchain_core.documents import Document
+from langchain_core.vectorstores import VectorStore
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from typing import List
 
 import os
 
 class LangchainManager:
     """
-        RAG 문서 제작\n
-        임베딩\n
-        채팅 작업
+        1. RAG 문서 제작\n
+        2. 임베딩\n
+        3. FAISS에 대입해 유사성 검색\n
+        4. 채팅
     """
+    _instance = None
+    _store = {}
+    _vectorstore: VectorStore = None
+    def __new__(self):
+        if not self._instance:
+            self._instance = super().__new__(self)
+        return self._instance
+
+
     # 해당 디렉토리의 모든 파일명을 가져오는 함수
     def _get_all_files_in_directory(self, dir):
         # 해당 디렉토리의 모든 파일 리스트 가져오기
         files = [os.path.join(dir, file) for file in os.listdir(dir)]
         return files
 
-    # rag 만들기
-    def make_rag(self):
-        result = []
+    # 1. rag 문서 리스트를 만들고, split 한다
+    def _make_docs(self) -> list[Document]:
+        result: list[Document] = []
+        docs: list[Document] = []
         folder_path = "./rag_documents"
 
-        # 폴더 내의 모든 텍스트 파일을 불러와 RAG 문서화 한다.
-        text_splitter = CharacterTextSplitter(
-            separator="\n",
-            chunk_size = 300,
-            chunk_overlap = 50,
-            length_function = len
-        )
+        # 폴더 내의 모든 텍스트 파일을 불러온다
         file_paths = self._get_all_files_in_directory(folder_path)
         for file_path in file_paths:
-            data = TextLoader(file_path, encoding="utf-8").load()
-            texts = text_splitter.split_text(data[0].page_content)
-            result.extend(texts)
+            print(f"문서 읽음: {file_path}")
+            data = TextLoader(file_path, encoding="utf-8").load() # 텍스트 로더를 통해 도큐먼트화
+            docs.extend(data)
+        
+        # 텍스트 쪼개기 준비
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size = 500,
+            chunk_overlap = 0
+        )
+        result = text_splitter.split_documents(docs)
         return result
     
-    # 텍스트 리스트를 임베드하여 벡터스토어로 만든다
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    # 도큐먼트 리스트를 하나의 긴 문자열로 변환
+    def format_docs(self, docs: list[Document]) -> list[str]:
+        return "\n\n".join([doc.page_content for doc in docs])
+    
+    # 2. 도큐먼트 리스트를 임베드하여 벡터스토어로 변환
+    def _make_vectorstore(self, docs: List[Document]) -> VectorStore:
         embeddings_model = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-004"
+            model="models/text-embedding-004"
         )
-        embeddings = embeddings_model.embed_documents(texts=texts)
-        return embeddings
+        vectorstore = FAISS.from_documents(
+            documents=docs,
+            embedding=embeddings_model,
+            distance_strategy = DistanceStrategy.COSINE
+        )
+        return vectorstore
     
-    # 특정 쿼리(클라이언트의 질문 등) 한 문장에 대한 유사도 검사 메소드
-    def embed_query(self, text: str) -> List[float]:
-        return self.embed_documents([text])[0]
-    
-    # TODO FAISS 적용하고... 모델에 RAG 검색한 값을 기반으로 출력할 수 있게
+    def get_session_history(self, session_token: str):
+        if session_token not in self._store:
+            self._store[session_token] = ChatMessageHistory()
+        return self._store[session_token]
 
-class LangchainRequester:
-    def ready(vectorstore):
-        # 언어 모델
-        llm = ChatOpenAI(
-            base_url="http://localhost:5000/v1",
-            api_key="lm-studio",
-            model="aya-expanse-8b",
-            temperature=0.8,
-            streaming=True,
-            max_tokens=300,
-            callbacks=[StreamingStdOutCallbackHandler()] # 스트림시 출력되는 콜백 함수
+    # 채팅 프로세스
+    def chat(self, llm: BaseChatModel, session_token: str, message: str):
+        # 3. 검색기를 만든다
+        if self._vectorstore is None:
+            self._vectorstore = self._make_vectorstore(self._make_docs())
+        # retriever = self._vectorstore.as_retriever()
+        retriever = MultiQueryRetriever.from_llm(
+            llm = llm,
+            retriever= self._vectorstore.as_retriever(
+                k=5,
+                fetch_k=50
+            )
         )
 
-        # 메모리
-        memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
+        # 4. 프롬프트를 만든다
+        # system_prompt = (
+        #     "채팅 기록과 채팅 기록의 맥락을 참조할 수 있는 최신 사용자 질문이 주어졌을 때,"
+        #     "채팅 기록 없이도 이해할 수 있는 독립적인 질문을 만들어 보세요."
+        #     "질문에 답변하지 말고 필요한 경우 재구성하고 그렇지 않은 경우 그대로 반환하세요."
+        # )
+        prompt = PromptTemplate.from_template(
+            """
+            자유롭게 말해. 500자 이내로 대답해.
+            이전 채팅 기록과 배경 지식이 존재해도 질문과 관련이 없으면 반영할 필요 없어.
+            질문과 배경 지식은 너만 알고 있고, 유저에게 대답할 때에는 독립적인 문장으로 재구성해서 답변해줘.
+
+            #이전 채팅 기록:
+            {chat_history}
+            
+            #질문:
+            {question}
+
+            #배경 지식:
+            {context}
+
+            #답변:
+            """
         )
 
-        # RAG 체인
-        chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=vectorstore.as_retriever(search_kwargs={"k":3}),
-            memory=memory,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={
-                "prompt": ChatPromptTemplate.from_messages([
-                    ("system", """
-                     200단어가 넘지 않게 짧고 간결하게 대답해줘.
-                     모든 문장은 한국어로 표현해.
-                     아래에 문서 내용이 있을 경우, 최대한 문서 내용을 기반으로 답해줘.
-                     
-                     문서 내용: {question}
-                     """),
-                    ("user", "{context}")
-                ])
+        # 5. LLM 정의
+
+        # 6. 체인 생성
+        chain = (
+            {
+                "context": itemgetter("question") | retriever,# | self.format_docs,
+                "question": itemgetter("question"),
+                "chat_history": itemgetter("chat_history")
+            }
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+
+        # 7. 채팅 기록 붙이기
+        chain_with_history = RunnableWithMessageHistory(
+            chain,
+            get_session_history=self.get_session_history,
+            input_messages_key="question",
+            history_messages_key="chat_history"
+        )
+
+        # 대화
+        response = chain_with_history.invoke(
+            {"question": message},
+            config={
+                "configurable": {
+                    "session_id": session_token
+                }
             }
         )
 
-        return chain
-    
-    def chat(chain, question):
-        try:
-            response = chain({"question": question})
-            sources = [doc.metadata.get('source', 'Unknown') for doc in response['source_documents']]
-            return response['answer'], sources
-        except Exception as e:
-            print("대화 중 오류 발생")
-            print(e)
-            return None, None
+        # 결과
+        return response

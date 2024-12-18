@@ -24,6 +24,8 @@ reflex run 으로 구동시키자
  그록은 24-12-17 기준 무료로 LLM을 사용할 수 있게 해준다구
 - langchain-text-splitters
  RAG 적용을 위해 문서 텍스트를 쪼개주는 역할을 하는 패키지
+ - faiss-cpu
+ RAG 적용 중 벡터스토어의 유사성을 찾기 위해 사용되는 FAISS
 
 
 사용된 환경변수

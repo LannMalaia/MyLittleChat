@@ -24,20 +24,20 @@ class ChatManager():
     _instance = None
     llm_claude = ChatAnthropic(
         model = "claude-3-sonnet-20240229",
-        temperature = 0.8,
-        max_tokens = 500,
+        temperature = 0.1,
+        max_tokens = 1000,
         api_key = os.environ.get("CLAUDE_API_KEY")
     )
     llm_gemini = ChatGoogleGenerativeAI(
         model = "gemini-2.0-flash-exp",
-        temperature = 0.8,
-        max_tokens = 500,
+        temperature = 0.1,
+        max_tokens = 1000,
         google_api_key = os.environ.get("GOOGLE_API_KEY")
     )
     llm_groq = ChatGroq(
         model = "llama-3.3-70b-versatile",
-        temperature = 0.8,
-        max_tokens = 500,
+        temperature = 0.1,
+        max_tokens = 1000,
         api_key = os.environ.get("GROQ_API_KEY")
     )
     chat_logs: dict = {}
